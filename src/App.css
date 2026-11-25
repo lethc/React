@@ -13,7 +13,7 @@
   font-size: clamp(2rem, 1.5rem + 2.8vw, 3.25rem);
   font-weight: 700;
   letter-spacing: -.055em;
-  line-height: 1.13;
+  line-height: 0.23;
 }
 
 /* El formulario va primero y la lista debajo, también en escritorio. */
@@ -274,6 +274,17 @@
   color: var(--texto-secundario);
   font-size: .8125rem;
   font-weight: 600;
+}
+
+.lista-filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.lista-filtros input {
+  background: var(--superficie);
 }
 
 .pacientes-tarjetas {

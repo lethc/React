@@ -1,10 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { normalizarEspecialidad } from "./especialidades.js";
-
-const ID_LISTA = "opciones-especialidad";
+import { normalizarTexto } from "./texto.js";
 
 export default function CampoEspecialidad({
-  catalogo, valor, seleccionValida, onChange, deshabilitado, invalido, descripcion, placeholder,
+  id = "especialidad", catalogo, valor, seleccionValida, onChange, deshabilitado, invalido, descripcion, placeholder,
 }) {
   const [abierto, setAbierto] = useState(false);
   const [mostrarTodas, setMostrarTodas] = useState(false);
@@ -12,9 +10,11 @@ export default function CampoEspecialidad({
   const entrada = useRef(null);
   const opcionActiva = useRef(null);
 
+  // Cada campo enlaza solo con su propio menú de opciones.
+  const idLista = `${id}-opciones`;
   const visible = abierto && !deshabilitado;
-  const busqueda = normalizarEspecialidad(valor);
-  const coincidencias = catalogo.filter((opcion) => normalizarEspecialidad(opcion).includes(busqueda));
+  const busqueda = normalizarTexto(valor);
+  const coincidencias = catalogo.filter((opcion) => normalizarTexto(opcion).includes(busqueda));
   const opciones = mostrarTodas ? catalogo : coincidencias;
 
   useEffect(() => {
@@ -75,15 +75,15 @@ export default function CampoEspecialidad({
   return (
     <div className="especialidad-control">
       <input
-        id="especialidad"
+        id={id}
         ref={entrada}
         type="text"
         autoComplete="off"
         role="combobox"
         aria-autocomplete="list"
         aria-expanded={visible}
-        aria-controls={ID_LISTA}
-        aria-activedescendant={visible && opciones[activa] ? `${ID_LISTA}-${activa}` : undefined}
+        aria-controls={idLista}
+        aria-activedescendant={visible && opciones[activa] ? `${idLista}-${activa}` : undefined}
         aria-invalid={invalido}
         aria-describedby={descripcion}
         placeholder={placeholder}
@@ -117,11 +117,11 @@ export default function CampoEspecialidad({
         {visible && opciones.length === 0 && (
           <p role="status">No hay especialidades que coincidan.</p>
         )}
-        <ul id={ID_LISTA} role="listbox" aria-label="Especialidades disponibles">
+        <ul id={idLista} role="listbox" aria-label="Especialidades disponibles">
           {visible && opciones.map((opcion, indice) => (
             <li
               key={opcion}
-              id={`${ID_LISTA}-${indice}`}
+              id={`${idLista}-${indice}`}
               ref={indice === activa ? opcionActiva : null}
               role="option"
               aria-selected={indice === activa}

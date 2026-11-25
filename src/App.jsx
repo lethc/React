@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react"
 import { solicitarEspecialidades, solicitarPacientes } from "./pacientesApi.js"
 import CampoEspecialidad from "./CampoEspecialidad.jsx"
 import { buscarEspecialidad } from "./especialidades.js"
+import { normalizarTexto } from "./texto.js"
 
 
 const PACIENTES_POR_PAGINA = 2;
@@ -20,7 +21,9 @@ function App() {
 
   const [pacientes, setPacientes] = useState([]);
   const [intentoGuardar, setIntentoGuardar] = useState(false);
-  const [pagina, setPagina] = useState(1);
+  const [busqueda, setBusqueda] = useState("");
+  const [filtroEspecialidad, setFiltroEspecialidad] = useState("");
+  const [paginaSolicitada, setPagina] = useState(1);
   const [cargando, setCargando] = useState(true);
   const [cargaCompleta, setCargaCompleta] = useState(false);
   const [procesando, setProcesando] = useState(false);
@@ -55,11 +58,28 @@ function App() {
     return () => { activo = false; };
   }, []);
 
-  const totalPaginas = Math.max(1, Math.ceil(pacientes.length / PACIENTES_POR_PAGINA));
+  // Incluye especialidades antiguas además de las del catálogo.
+  const opcionesFiltro = new Map();
+  for (const especialidad of [...pacientes.map((paciente) => paciente.especialidad), ...especialidades]) {
+    if (especialidad.trim()) opcionesFiltro.set(normalizarTexto(especialidad), especialidad);
+  }
+  const especialidadesFiltro = [...opcionesFiltro.values()].sort((a, b) => a.localeCompare(b, "es"));
+  // El texto parcial muestra sugerencias. El filtro se aplica cuando coincide con una especialidad completa.
+  const especialidadSeleccionada = buscarEspecialidad(especialidadesFiltro, filtroEspecialidad);
+
+  // Filtra todos los registros antes de calcular las páginas.
+  const nombreBuscado = normalizarTexto(busqueda);
+  const especialidadBuscada = normalizarTexto(especialidadSeleccionada || "");
+  const filtrosActivos = Boolean(nombreBuscado || especialidadBuscada);
+  const resultados = pacientes.filter((paciente) => {
+    const coincideNombre = normalizarTexto(paciente.nombre).includes(nombreBuscado);
+    const coincideEspecialidad = !especialidadBuscada || normalizarTexto(paciente.especialidad) === especialidadBuscada;
+    return coincideNombre && coincideEspecialidad;
+  }).reverse();
+  const totalPaginas = Math.max(1, Math.ceil(resultados.length / PACIENTES_POR_PAGINA));
+  const pagina = Math.min(paginaSolicitada, totalPaginas);
   const inicioPagina = (pagina - 1) * PACIENTES_POR_PAGINA;
-  // Invierte una copia para mostrar los más recientes primero sin mutar el estado.
-  const pacientesPorRecencia = [...pacientes].reverse();
-  const pacientesVisibles = pacientesPorRecencia.slice(inicioPagina, inicioPagina + PACIENTES_POR_PAGINA);
+  const pacientesVisibles = resultados.slice(inicioPagina, inicioPagina + PACIENTES_POR_PAGINA);
 
   // El ID del paciente seleccionado activa el modo de edición.
   const [idPacienteEditando, setIdPacienteEditando] = useState(null);
@@ -126,9 +146,6 @@ function App() {
       const pacientesRestantes = pacientes.filter((paciente) => paciente.id !== id);
       setPacientes(pacientesRestantes);
 
-      // Si se vacía la última página, vuelve a la última que tenga registros.
-      const ultimaPagina = Math.max(1, Math.ceil(pacientesRestantes.length / PACIENTES_POR_PAGINA));
-      setPagina((actual) => Math.min(actual, ultimaPagina));
     } catch (error) {
       setErrorServidor(error.message);
     } finally {
@@ -227,12 +244,46 @@ function App() {
           <div className="lista-encabezado">
             <h2 id="titulo-lista">Lista de pacientes</h2>
             {cargaCompleta && (
-              <span className="lista-contador">
-                {pacientes.length} {pacientes.length === 1 ? "registro" : "registros"}
+              <span className="lista-contador" role="status">
+                {filtrosActivos && `${resultados.length} de `}{pacientes.length} {pacientes.length === 1 ? "registro" : "registros"}
               </span>
             )}
           </div>
 
+          {cargaCompleta && pacientes.length > 0 && (
+            <div className="lista-filtros" role="search" aria-label="Búsqueda de pacientes">
+              <div className="campo">
+                <label htmlFor="buscar-paciente">Buscar por nombre</label>
+                <input
+                  type="search"
+                  id="buscar-paciente"
+                  placeholder="Escribe un nombre"
+                  value={busqueda}
+                  onChange={(evento) => {
+                    setBusqueda(evento.target.value);
+                    setPagina(1);
+                  }}
+                />
+              </div>
+              <div className="campo">
+                <label htmlFor="filtrar-especialidad">Filtrar por especialidad</label>
+                <CampoEspecialidad
+                  id="filtrar-especialidad"
+                  catalogo={especialidadesFiltro}
+                  valor={filtroEspecialidad}
+                  seleccionValida={especialidadSeleccionada}
+                  onChange={(valor) => {
+                    setFiltroEspecialidad(valor);
+                    setPagina(1);
+                  }}
+                  placeholder="Todas las especialidades"
+                />
+              </div>
+            </div>
+          )}
+          {filtrosActivos && pacientes.length > 0 && resultados.length === 0 && (
+            <p className="lista-estado">No se encontraron pacientes que coincidan con los filtros.</p>
+          )}
           {cargando && <p className="lista-estado" role="status">Cargando pacientes…</p>}
           {cargaCompleta && pacientes.length === 0 && (
             <p className="lista-estado">Todavía no hay pacientes registrados.</p>
