@@ -82,7 +82,12 @@ input[aria-invalid="true"] {
   gap: 14px;
 }
 
+/* Los datos y las acciones comparten fila cuando hay espacio. */
 .paciente-tarjeta {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
   padding: 20px;
   border: 1px solid #dce4f0;
   border-left: 4px solid #1f3c88;
@@ -121,10 +126,11 @@ input[aria-invalid="true"] {
 
 @media (max-width: 480px) {
   .paciente-tarjeta {
+    grid-template-columns: minmax(0, 1fr);
     padding: 16px;
   }
 }
-/* Accion de eliminar debajo de los datos de cada paciente. */
+/* Espacio entre los botones del formulario y de las tarjetas. */
 .formulario-acciones,
 .paciente-acciones {
   display: flex;
@@ -143,7 +149,6 @@ input[aria-invalid="true"] {
 
 .paciente-acciones {
   justify-content: flex-end;
-  margin-top: 18px;
 }
 
 .boton-eliminar {
@@ -158,9 +163,16 @@ input[aria-invalid="true"] {
   transition: background-color 150ms ease, border-color 150ms ease;
 }
 
-.boton-eliminar:hover {
+.boton-eliminar:not(:disabled):hover {
   background: #991b1b;
   border-color: #991b1b;
+}
+
+.boton-eliminar:disabled {
+  background: #f1f3f6;
+  border-color: #dce4f0;
+  color: #526176;
+  cursor: not-allowed;
 }
 
 .boton-eliminar:focus-visible {
@@ -168,8 +180,42 @@ input[aria-invalid="true"] {
   outline-offset: 3px;
 }
 
-@media (max-width: 480px) {
-  .boton-eliminar {
-    width: 100%;
-  }
+/* Controles para navegar entre páginas de pacientes. */
+.pacientes-paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+  color: #18305d;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pacientes-paginacion button {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  background: transparent;
+  color: #526176;
+  font: inherit;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.pacientes-paginacion button:not(:disabled):hover {
+  color: #1f3c88;
+  background: #f2f5fb;
+}
+
+.pacientes-paginacion button:disabled {
+  color: #a5afbf;
+  cursor: default;
+}
+
+.pacientes-paginacion button:focus-visible {
+  outline: 2px solid #1f3c88;
+  outline-offset: 3px;
 }

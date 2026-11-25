@@ -2,6 +2,8 @@ import "./App.css"
 import { useState } from "react"
 
 
+const PACIENTES_POR_PAGINA = 2;
+
 // Pantalla principal: presenta el registro y la lista de pacientes.
 function App() {
 
@@ -11,6 +13,13 @@ function App() {
 
   const [pacientes, setPacientes] = useState([]);
   const [intentoGuardar, setIntentoGuardar] = useState(false);
+  const [pagina, setPagina] = useState(1);
+
+  const totalPaginas = Math.max(1, Math.ceil(pacientes.length / PACIENTES_POR_PAGINA));
+  const inicioPagina = (pagina - 1) * PACIENTES_POR_PAGINA;
+  // Invierte una copia para mostrar los más recientes primero sin mutar el estado.
+  const pacientesPorRecencia = [...pacientes].reverse();
+  const pacientesVisibles = pacientesPorRecencia.slice(inicioPagina, inicioPagina + PACIENTES_POR_PAGINA);
 
   // El ID del paciente seleccionado activa el modo de edición.
   const [idPacienteEditando, setIdPacienteEditando] = useState(null);
@@ -21,7 +30,7 @@ function App() {
   const faltaEdad = intentoGuardar && !edad.trim();
   const faltaEspecialidad = intentoGuardar && !especialidad.trim();
 
-  // Vuelve al modo de registro al guardar, cancelar o eliminar el paciente en edición.
+  // Vuelve al modo de registro al guardar o cancelar la edición.
   const limpiarFormulario = () => {
     setNombre("");
     setEdad("");
@@ -47,16 +56,23 @@ function App() {
     } else {
       const nuevoPaciente = { id: Date.now(), ...datosPaciente };
       setPacientes((listaActual) => [...listaActual, nuevoPaciente]);
+      // Vuelve al inicio para mostrar de inmediato el nuevo registro.
+      setPagina(1);
     }
 
     limpiarFormulario();
   };
 
   const eliminarPaciente = (id) => {
-    setPacientes((listaActual) => listaActual.filter((paciente) => paciente.id !== id));
-    if (id === idPacienteEditando) {
-      limpiarFormulario();
-    }
+    // Protege el registro que el usuario tiene abierto en el formulario.
+    if (id === idPacienteEditando) return;
+
+    const pacientesRestantes = pacientes.filter((paciente) => paciente.id !== id);
+    setPacientes(pacientesRestantes);
+
+    // Si se vacía la última página, vuelve a la última que tenga registros.
+    const ultimaPagina = Math.max(1, Math.ceil(pacientesRestantes.length / PACIENTES_POR_PAGINA));
+    setPagina((actual) => Math.min(actual, ultimaPagina));
   };
 
   // Carga los datos en el formulario para que el usuario pueda modificarlos.
@@ -116,7 +132,7 @@ function App() {
         ) : (
           <div className="pacientes-tarjetas">
             {/* Cada tarjeta agrupa el nombre y los datos del paciente. */}
-            {pacientes.map((paciente) => (
+            {pacientesVisibles.map((paciente) => (
               <article className="paciente-tarjeta" key={paciente.id}>
                 <dl className="paciente-datos">
                   <div>
@@ -143,6 +159,7 @@ function App() {
                   <button
                     type="button"
                     className="boton-eliminar"
+                    disabled={paciente.id === idPacienteEditando}
                     aria-label={`Eliminar paciente ${paciente.nombre}`}
                     onClick={() => eliminarPaciente(paciente.id)}
                   >
@@ -152,6 +169,27 @@ function App() {
               </article>
             ))}
           </div>
+        )}
+        {totalPaginas > 1 && (
+          <nav className="pacientes-paginacion" aria-label="Paginación de pacientes">
+            <button
+              type="button"
+              aria-label="Página anterior"
+              disabled={pagina === 1}
+              onClick={() => setPagina(pagina - 1)}
+            >
+              <span aria-hidden="true">&lsaquo;</span>
+            </button>
+            <span aria-live="polite">Página {pagina} de {totalPaginas}</span>
+            <button
+              type="button"
+              aria-label="Página siguiente"
+              disabled={pagina === totalPaginas}
+              onClick={() => setPagina(pagina + 1)}
+            >
+              <span aria-hidden="true">&rsaquo;</span>
+            </button>
+          </nav>
         )}
       </div>
     </div>
