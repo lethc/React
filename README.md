@@ -1,16 +1,16 @@
-# React + Vite
+# Sistema de Pacientes
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+React muestra los pacientes y el backend de Express, dentro de `backend/`, los consulta y guarda en MongoDB.
 
-Currently, two official plugins are available:
+## Ejecutar en desarrollo
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Inicia MongoDB. Por defecto, la aplicación utiliza el servidor local `127.0.0.1:27017` y la colección `mydb02.pacientes`.
+2. Desde la raíz de `Project01-app`, ejecuta `npm install`.
+3. En una terminal, ejecuta `npm run dev:api`. La API queda disponible en `http://127.0.0.1:3001/api/pacientes`.
+4. En otra terminal, ejecuta `npm run dev` y abre la dirección que muestra Vite. Vite reenvía automáticamente las peticiones de pacientes a Express.
 
-## React Compiler
+Si usas otra conexión, copia `backend/.env.example` a `backend/.env` y ajusta `MONGODB_URI`.
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Ejecutar con React compilado
 
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Ejecuta `npm run build` y luego `npm start`. Abre `http://127.0.0.1:3001` para usar React y la API desde el mismo servidor.

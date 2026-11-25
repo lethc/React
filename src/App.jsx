@@ -1,5 +1,6 @@
 import "./App.css"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { solicitarPacientes } from "./pacientesApi.js"
 
 
 const PACIENTES_POR_PAGINA = 2;
@@ -14,6 +15,29 @@ function App() {
   const [pacientes, setPacientes] = useState([]);
   const [intentoGuardar, setIntentoGuardar] = useState(false);
   const [pagina, setPagina] = useState(1);
+  const [cargando, setCargando] = useState(true);
+  const [cargaCompleta, setCargaCompleta] = useState(false);
+  const [procesando, setProcesando] = useState(false);
+  const [errorServidor, setErrorServidor] = useState("");
+
+  useEffect(() => {
+    let activo = true;
+
+    solicitarPacientes()
+      .then((registros) => {
+        if (!activo) return;
+        setPacientes(registros);
+        setCargaCompleta(true);
+      })
+      .catch((error) => {
+        if (activo) setErrorServidor(`${error.message} Recarga la página para volver a intentar.`);
+      })
+      .finally(() => {
+        if (activo) setCargando(false);
+      });
+
+    return () => { activo = false; };
+  }, []);
 
   const totalPaginas = Math.max(1, Math.ceil(pacientes.length / PACIENTES_POR_PAGINA));
   const inicioPagina = (pagina - 1) * PACIENTES_POR_PAGINA;
@@ -39,46 +63,62 @@ function App() {
     setIdPacienteEditando(null);
   };
 
-  const guardarPaciente = () => {
+  const guardarPaciente = async () => {
     setIntentoGuardar(true);
     if (!nombre.trim() || !edad.trim() || !especialidad.trim()) {
       window.alert("Completa el nombre, la edad y la especialidad antes de guardar.");
       return;
     }
 
-    const datosPaciente = { nombre, edad, especialidad };
-
-    // Al editar, conserva el ID y reemplaza solo los datos del paciente seleccionado.
-    if (modoEdicion) {
-      setPacientes((listaActual) => listaActual.map((paciente) =>
-        paciente.id === idPacienteEditando ? { ...paciente, ...datosPaciente } : paciente
-      ));
-    } else {
-      const nuevoPaciente = { id: Date.now(), ...datosPaciente };
-      setPacientes((listaActual) => [...listaActual, nuevoPaciente]);
-      // Vuelve al inicio para mostrar de inmediato el nuevo registro.
-      setPagina(1);
+    const datosPaciente = { nombre, edad: Number(edad), especialidad };
+    setProcesando(true);
+    setErrorServidor("");
+    try {
+      if (modoEdicion) {
+        const actualizado = await solicitarPacientes(`/${idPacienteEditando}`, "PUT", datosPaciente);
+        setPacientes((listaActual) => listaActual.map((paciente) =>
+          paciente.id === actualizado.id ? actualizado : paciente
+        ));
+      } else {
+        const nuevo = await solicitarPacientes("", "POST", datosPaciente);
+        setPacientes((listaActual) => [...listaActual, nuevo]);
+        setPagina(1);
+      }
+      limpiarFormulario();
+    } catch (error) {
+      setErrorServidor(error.message);
+    } finally {
+      setProcesando(false);
     }
-
-    limpiarFormulario();
   };
 
-  const eliminarPaciente = (id) => {
-    // Protege el registro que el usuario tiene abierto en el formulario.
+  const eliminarPaciente = async ({ id, nombre }) => {
     if (id === idPacienteEditando) return;
 
-    const pacientesRestantes = pacientes.filter((paciente) => paciente.id !== id);
-    setPacientes(pacientesRestantes);
+    const confirmado = window.confirm(`¿Deseas eliminar a ${nombre}? Esta acción no se puede deshacer.`);
+    if (!confirmado) return;
 
-    // Si se vacía la última página, vuelve a la última que tenga registros.
-    const ultimaPagina = Math.max(1, Math.ceil(pacientesRestantes.length / PACIENTES_POR_PAGINA));
-    setPagina((actual) => Math.min(actual, ultimaPagina));
+    setProcesando(true);
+    setErrorServidor("");
+    try {
+      await solicitarPacientes(`/${id}`, "DELETE");
+      const pacientesRestantes = pacientes.filter((paciente) => paciente.id !== id);
+      setPacientes(pacientesRestantes);
+
+      // Si se vacía la última página, vuelve a la última que tenga registros.
+      const ultimaPagina = Math.max(1, Math.ceil(pacientesRestantes.length / PACIENTES_POR_PAGINA));
+      setPagina((actual) => Math.min(actual, ultimaPagina));
+    } catch (error) {
+      setErrorServidor(error.message);
+    } finally {
+      setProcesando(false);
+    }
   };
 
   // Carga los datos en el formulario para que el usuario pueda modificarlos.
   const editarPaciente = (paciente) => {
     setNombre(paciente.nombre);
-    setEdad(paciente.edad);
+    setEdad(String(paciente.edad));
     setEspecialidad(paciente.especialidad);
     setIntentoGuardar(false);
     setIdPacienteEditando(paciente.id);
@@ -97,39 +137,42 @@ function App() {
             <span aria-hidden="true">⚠️</span> Ingresa el nombre del paciente.
           </p>
         )}
-        <input type="text" aria-label="Nombre del paciente" aria-invalid={faltaNombre} aria-describedby={faltaNombre ? "error-nombre" : undefined} placeholder="Nombre del Paciente" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+        <input type="text" aria-label="Nombre del paciente" aria-invalid={faltaNombre} aria-describedby={faltaNombre ? "error-nombre" : undefined} placeholder="Nombre del Paciente" value={nombre} disabled={procesando} onChange={(e) => setNombre(e.target.value)} />
         {faltaEdad && (
           <p id="error-edad" className="mensaje-error" role="alert">
             <span aria-hidden="true">⚠️</span> Ingresa la edad del paciente.
           </p>
         )}
-        <input type="number" aria-label="Edad" aria-invalid={faltaEdad} aria-describedby={faltaEdad ? "error-edad" : undefined} placeholder="Edad" value={edad} onChange={(e) => setEdad(e.target.value)} />
+        <input type="number" aria-label="Edad" aria-invalid={faltaEdad} aria-describedby={faltaEdad ? "error-edad" : undefined} placeholder="Edad" value={edad} disabled={procesando} onChange={(e) => setEdad(e.target.value)} />
         {faltaEspecialidad && (
           <p id="error-especialidad" className="mensaje-error" role="alert">
             <span aria-hidden="true">⚠️</span> Ingresa la especialidad.
           </p>
         )}
-        <input type="text" aria-label="Especialidad" aria-invalid={faltaEspecialidad} aria-describedby={faltaEspecialidad ? "error-especialidad" : undefined} placeholder="Especialidad" value={especialidad} onChange={(e) => setEspecialidad(e.target.value)} />
+        <input type="text" aria-label="Especialidad" aria-invalid={faltaEspecialidad} aria-describedby={faltaEspecialidad ? "error-especialidad" : undefined} placeholder="Especialidad" value={especialidad} disabled={procesando} onChange={(e) => setEspecialidad(e.target.value)} />
         <div className="formulario-acciones">
-          <button type="button" onClick={guardarPaciente}>
+          <button type="button" onClick={guardarPaciente} disabled={procesando || !cargaCompleta}>
             {modoEdicion ? "Guardar cambios" : "Guardar Paciente"}
           </button>
           {modoEdicion && (
-            <button type="button" className="boton-cancelar" onClick={limpiarFormulario}>
+            <button type="button" className="boton-cancelar" onClick={limpiarFormulario} disabled={procesando}>
               Cancelar
             </button>
           )}
         </div>
       </div>
-      {/* Muestra el estado pacientes; los registros permanecen solo mientras la pagina esta abierta. */}
+      {/* Muestra los registros cargados desde MongoDB. */}
       <div className="lista">
         <div className="lista-encabezado">
           <h2>Lista de Pacientes</h2>
           <span className="lista-contador">{pacientes.length} registrados</span>
         </div>
-        {pacientes.length === 0 ? (
+        {cargando && <p role="status">Cargando pacientes…</p>}
+        {errorServidor && <p className="mensaje-error" role="alert">{errorServidor}</p>}
+        {cargaCompleta && pacientes.length === 0 && (
           <p className="lista-vacia">Todavía no hay pacientes. Completa el formulario para registrar el primero.</p>
-        ) : (
+        )}
+        {pacientes.length > 0 && (
           <div className="pacientes-tarjetas">
             {/* Cada tarjeta agrupa el nombre y los datos del paciente. */}
             {pacientesVisibles.map((paciente) => (
@@ -152,6 +195,7 @@ function App() {
                   <button
                     type="button"
                     aria-label={`Editar paciente ${paciente.nombre}`}
+                    disabled={procesando}
                     onClick={() => editarPaciente(paciente)}
                   >
                     Editar
@@ -159,9 +203,9 @@ function App() {
                   <button
                     type="button"
                     className="boton-eliminar"
-                    disabled={paciente.id === idPacienteEditando}
+                    disabled={procesando || paciente.id === idPacienteEditando}
                     aria-label={`Eliminar paciente ${paciente.nombre}`}
-                    onClick={() => eliminarPaciente(paciente.id)}
+                    onClick={() => eliminarPaciente(paciente)}
                   >
                     Eliminar paciente
                   </button>
