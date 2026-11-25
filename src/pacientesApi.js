@@ -1,6 +1,6 @@
 // Vite reenvía estas peticiones al servidor Express.
-export async function solicitarPacientes(ruta = "", metodo = "GET", datos) {
-  const respuesta = await fetch(`/api/pacientes${ruta}`, {
+async function solicitar(ruta, metodo = "GET", datos) {
+  const respuesta = await fetch(ruta, {
     method: metodo,
     headers: datos ? { "Content-Type": "application/json" } : undefined,
     body: datos ? JSON.stringify(datos) : undefined,
@@ -15,4 +15,12 @@ export async function solicitarPacientes(ruta = "", metodo = "GET", datos) {
     throw new Error(resultado?.error || "El servidor de pacientes no respondió correctamente.");
   }
   return resultado;
+}
+
+export function solicitarPacientes(ruta = "", metodo = "GET", datos) {
+  return solicitar(`/api/pacientes${ruta}`, metodo, datos);
+}
+
+export function solicitarEspecialidades() {
+  return solicitar("/api/especialidades");
 }

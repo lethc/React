@@ -1,10 +1,41 @@
-body {
-  font-family: Arial, Arial, Helvetica, sans-serif;
-  background-color: #f4f6f8;
-  margin: 0;
-  padding: 0;
+:root {
+  font-family: "Segoe UI", Arial, sans-serif;
+  color: var(--tinta);
+  background: var(--fondo);
+  font-synthesis: none;
+
+  /* Paleta clínica: blancos y verdes azulados, con rojo para alertas. */
+  --fondo: #eaf4f2;
+  --tinta: #12343b;
+  --texto-secundario: #466267;
+  --superficie: #fff;
+  --suave: #f2f8f7;
+  --borde: #d4e5e2;
+  --borde-control: #afc9c5;
+  --acento: #08766b;
+  --acento-oscuro: #055b55;
+  --acento-suave: #e5f5f0;
+  --alerta: #932f3b;
+  --alerta-suave: #fff5f6;
+  --alerta-borde: #ecc8ce;
 }
 
 * {
   box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 280px;
+}
+
+button,
+input {
+  font: inherit;
+}
+
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--acento);
+  outline-offset: 3px;
 }
