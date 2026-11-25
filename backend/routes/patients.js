@@ -1,6 +1,7 @@
 import express from 'express'
 import mongoose from 'mongoose'
 import Patient from '../models/Patient.js'
+import Specialty from '../models/Specialty.js'
 
 const router = express.Router()
 
@@ -23,14 +24,20 @@ router.param('id', (req, res, next, id) => {
 })
 
 // Valida los tres campos antes de guardar y solo acepta estos datos del formulario.
-function validarPaciente(req, res, next) {
+async function validarPaciente(req, res, next) {
     const { nombre, edad, especialidad } = req.body || {}
     if (typeof nombre !== 'string' || !nombre.trim() ||
         !Number.isFinite(edad) || edad < 0 ||
         typeof especialidad !== 'string' || !especialidad.trim()) {
         return res.status(400).json({ error: 'Ingresa un nombre, una edad mayor o igual a cero y una especialidad.' })
     }
-    req.paciente = { nombre: nombre.trim(), edad, especialidad: especialidad.trim() }
+    // Comprueba el catálogo también para peticiones directas a la API.
+    const nombreEspecialidad = especialidad.trim()
+    if (!await Specialty.exists({ nombre: nombreEspecialidad })) {
+        return res.status(400).json({ error: 'Elige una especialidad del catálogo.' })
+    }
+
+    req.paciente = { nombre: nombre.trim(), edad, especialidad: nombreEspecialidad }
     next()
 }
 
