@@ -10,8 +10,20 @@ function App() {
   const [especialidad, setEspecialidad] = useState("");
 
   const [pacientes, setPacientes] = useState([]);
+  const [intentoGuardar, setIntentoGuardar] = useState(false);
+
+  // Los avisos aparecen al guardar y se ocultan al completar cada campo.
+  const faltaNombre = intentoGuardar && !nombre.trim();
+  const faltaEdad = intentoGuardar && !edad.trim();
+  const faltaEspecialidad = intentoGuardar && !especialidad.trim();
 
   const guardarPaciente = () => {
+    setIntentoGuardar(true);
+    // Detiene el registro si falta un dato o solo se escribieron espacios.
+    if (!nombre.trim() || !edad.trim() || !especialidad.trim()) {
+      window.alert("No es posible registrar un paciente sin completar todos los datos: nombre, edad y especialidad.");
+      return;
+    }
     const nuevoPaciente = {
       id: Date.now(),
       nombre: nombre,
@@ -20,9 +32,15 @@ function App() {
     };
 
     setPacientes([...pacientes, nuevoPaciente]);
+    setIntentoGuardar(false);
     setNombre("");
     setEdad("");
     setEspecialidad("");
+  };
+
+  // Recibe el id de la tarjeta y conserva los demas pacientes.
+  const eliminarPaciente = (id) => {
+    setPacientes((listaActual) => listaActual.filter((paciente) => paciente.id !== id));
   };
 
   return (
@@ -33,25 +51,71 @@ function App() {
         <h2>
           Registrar Paciente
         </h2>
-        <input type="text" placeholder="Nombre del Paciente" value={nombre} onChange={(e) => setNombre(e.target.value)} />
-        <input type="number" placeholder="Edad" value={edad} onChange={(e) => setEdad(e.target.value)} />
-        <input type="text" placeholder="Especialidad" value={especialidad} onChange={(e) => setEspecialidad(e.target.value)} />
+        {faltaNombre && (
+          <p id="error-nombre" className="mensaje-error" role="alert">
+            <span aria-hidden="true">⚠️</span> Ingresa el nombre del paciente.
+          </p>
+        )}
+        <input type="text" aria-label="Nombre del paciente" aria-invalid={faltaNombre} aria-describedby={faltaNombre ? "error-nombre" : undefined} placeholder="Nombre del Paciente" value={nombre} onChange={(e) => setNombre(e.target.value)} />
+        {faltaEdad && (
+          <p id="error-edad" className="mensaje-error" role="alert">
+            <span aria-hidden="true">⚠️</span> Ingresa la edad del paciente.
+          </p>
+        )}
+        <input type="number" aria-label="Edad" aria-invalid={faltaEdad} aria-describedby={faltaEdad ? "error-edad" : undefined} placeholder="Edad" value={edad} onChange={(e) => setEdad(e.target.value)} />
+        {faltaEspecialidad && (
+          <p id="error-especialidad" className="mensaje-error" role="alert">
+            <span aria-hidden="true">⚠️</span> Ingresa la especialidad.
+          </p>
+        )}
+        <input type="text" aria-label="Especialidad" aria-invalid={faltaEspecialidad} aria-describedby={faltaEspecialidad ? "error-especialidad" : undefined} placeholder="Especialidad" value={especialidad} onChange={(e) => setEspecialidad(e.target.value)} />
         <button onClick={guardarPaciente}>Guardar Paciente</button>
       </div>
       {/* Muestra el estado pacientes; los registros permanecen solo mientras la pagina esta abierta. */}
       <div className="lista">
-        <h2>Lista de Pacientes</h2>
+        <div className="lista-encabezado">
+          <h2>Lista de Pacientes</h2>
+          <span className="lista-contador">{pacientes.length} registrados</span>
+        </div>
         {pacientes.length === 0 ? (
-          <p>No hay pacientes registrados</p>
+          <p className="lista-vacia">Todavía no hay pacientes. Completa el formulario para registrar el primero.</p>
         ) : (
-          pacientes.map((paciente)=>(
-            <div key={paciente.id}>
-              <p><strong>Nombre: </strong>{paciente.nombre}</p>
-              <p><strong>Edad: </strong>{paciente.edad}</p>
-              <p><strong>Especialidad: </strong>{paciente.especialidad}</p>
-            <hr />
-            </div>
-          ))
+          <div className="pacientes-tarjetas">
+            {/* Cada tarjeta agrupa el nombre y los datos del paciente. */}
+            {pacientes.map((paciente) => (
+              <article className="paciente-tarjeta" key={paciente.id}>
+                <div className="paciente-encabezado">
+                  <span className="paciente-avatar" aria-hidden="true">
+                    {paciente.nombre.trim().charAt(0).toUpperCase()}
+                  </span>
+                  <div className="paciente-identidad">
+                    <p className="paciente-etiqueta">Paciente</p>
+                    <h3>{paciente.nombre}</h3>
+                  </div>
+                </div>
+                <dl className="paciente-datos">
+                  <div>
+                    <dt>Edad</dt>
+                    <dd>{paciente.edad} {Number(paciente.edad) === 1 ? "año" : "años"}</dd>
+                  </div>
+                  <div>
+                    <dt>Especialidad</dt>
+                    <dd>{paciente.especialidad}</dd>
+                  </div>
+                </dl>
+                <div className="paciente-acciones">
+                  <button
+                    type="button"
+                    className="boton-eliminar"
+                    aria-label={`Eliminar paciente ${paciente.nombre}`}
+                    onClick={() => eliminarPaciente(paciente.id)}
+                  >
+                    Eliminar paciente
+                  </button>
+                </div>
+              </article>
+            ))}
+          </div>
         )}
       </div>
     </div>

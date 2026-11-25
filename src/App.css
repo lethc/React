@@ -42,3 +42,161 @@ button{
 button:hover{
   background-color: #16306b;
 }
+
+/* Avisos sobre los campos incompletos y borde de advertencia. */
+.mensaje-error {
+  margin: 0 0 6px;
+  color: #9a3412;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+input[aria-invalid="true"] {
+  border-color: #b45309;
+}
+/* Tarjetas de pacientes: nombre destacado y datos separados por etiquetas. */
+.lista-encabezado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.lista-encabezado h2 {
+  margin: 0;
+}
+
+.lista-contador {
+  padding: 6px 10px;
+  border-radius: 20px;
+  background: #eaf0ff;
+  color: #1f3c88;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.pacientes-tarjetas {
+  display: grid;
+  gap: 14px;
+}
+
+.paciente-tarjeta {
+  padding: 20px;
+  border: 1px solid #dce4f0;
+  border-left: 4px solid #1f3c88;
+  border-radius: 12px;
+  background: #fbfcff;
+}
+
+.paciente-encabezado {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.paciente-avatar {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #eaf0ff;
+  color: #1f3c88;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.paciente-identidad {
+  min-width: 0;
+}
+
+.paciente-etiqueta {
+  margin: 0 0 4px;
+  color: #526176;
+  font-size: 12px;
+}
+
+.paciente-identidad h3 {
+  margin: 0;
+  color: #18305d;
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+
+.paciente-datos {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: 16px;
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid #e3e9f2;
+}
+
+.paciente-datos dt {
+  margin-bottom: 5px;
+  color: #526176;
+  font-size: 13px;
+}
+
+.paciente-datos dd {
+  margin: 0;
+  color: #18305d;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.lista-vacia {
+  padding: 20px;
+  border: 1px dashed #b9c8df;
+  border-radius: 12px;
+  color: #526176;
+  line-height: 1.5;
+  text-align: center;
+}
+
+@media (max-width: 480px) {
+  .paciente-tarjeta {
+    padding: 16px;
+  }
+
+  .paciente-datos {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+/* Accion de eliminar debajo de los datos de cada paciente. */
+.paciente-acciones {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 18px;
+}
+
+.boton-eliminar {
+  padding: 10px 16px;
+  border: 1px solid #b91c1c;
+  border-radius: 8px;
+  background: #b91c1c;
+  color: #fff;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  transition: background-color 150ms ease, border-color 150ms ease;
+}
+
+.boton-eliminar:hover {
+  background: #991b1b;
+  border-color: #991b1b;
+}
+
+.boton-eliminar:focus-visible {
+  outline: 3px solid #b91c1c;
+  outline-offset: 3px;
+}
+
+@media (max-width: 480px) {
+  .boton-eliminar {
+    width: 100%;
+  }
+}
