@@ -125,8 +125,23 @@ input[aria-invalid="true"] {
   }
 }
 /* Accion de eliminar debajo de los datos de cada paciente. */
+.formulario-acciones,
 .paciente-acciones {
   display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.boton-cancelar {
+  background: #eaf0ff;
+  color: #1f3c88;
+}
+
+.boton-cancelar:hover {
+  background: #dbe5ff;
+}
+
+.paciente-acciones {
   justify-content: flex-end;
   margin-top: 18px;
 }

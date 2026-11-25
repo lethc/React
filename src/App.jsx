@@ -12,44 +12,69 @@ function App() {
   const [pacientes, setPacientes] = useState([]);
   const [intentoGuardar, setIntentoGuardar] = useState(false);
 
+  // El ID del paciente seleccionado activa el modo de edición.
+  const [idPacienteEditando, setIdPacienteEditando] = useState(null);
+  const modoEdicion = idPacienteEditando !== null;
+
   // Los avisos aparecen al guardar y se ocultan al completar cada campo.
   const faltaNombre = intentoGuardar && !nombre.trim();
   const faltaEdad = intentoGuardar && !edad.trim();
   const faltaEspecialidad = intentoGuardar && !especialidad.trim();
 
-  const guardarPaciente = () => {
-    setIntentoGuardar(true);
-    // Detiene el registro si falta un dato o solo se escribieron espacios.
-    if (!nombre.trim() || !edad.trim() || !especialidad.trim()) {
-      window.alert("No es posible registrar un paciente sin completar todos los datos: nombre, edad y especialidad.");
-      return;
-    }
-    const nuevoPaciente = {
-      id: Date.now(),
-      nombre: nombre,
-      edad: edad,
-      especialidad: especialidad,
-    };
-
-    setPacientes([...pacientes, nuevoPaciente]);
-    setIntentoGuardar(false);
+  // Vuelve al modo de registro al guardar, cancelar o eliminar el paciente en edición.
+  const limpiarFormulario = () => {
     setNombre("");
     setEdad("");
     setEspecialidad("");
+    setIntentoGuardar(false);
+    setIdPacienteEditando(null);
   };
 
-  // Recibe el id de la tarjeta y conserva los demas pacientes.
+  const guardarPaciente = () => {
+    setIntentoGuardar(true);
+    if (!nombre.trim() || !edad.trim() || !especialidad.trim()) {
+      window.alert("Completa el nombre, la edad y la especialidad antes de guardar.");
+      return;
+    }
+
+    const datosPaciente = { nombre, edad, especialidad };
+
+    // Al editar, conserva el ID y reemplaza solo los datos del paciente seleccionado.
+    if (modoEdicion) {
+      setPacientes((listaActual) => listaActual.map((paciente) =>
+        paciente.id === idPacienteEditando ? { ...paciente, ...datosPaciente } : paciente
+      ));
+    } else {
+      const nuevoPaciente = { id: Date.now(), ...datosPaciente };
+      setPacientes((listaActual) => [...listaActual, nuevoPaciente]);
+    }
+
+    limpiarFormulario();
+  };
+
   const eliminarPaciente = (id) => {
     setPacientes((listaActual) => listaActual.filter((paciente) => paciente.id !== id));
+    if (id === idPacienteEditando) {
+      limpiarFormulario();
+    }
+  };
+
+  // Carga los datos en el formulario para que el usuario pueda modificarlos.
+  const editarPaciente = (paciente) => {
+    setNombre(paciente.nombre);
+    setEdad(paciente.edad);
+    setEspecialidad(paciente.especialidad);
+    setIntentoGuardar(false);
+    setIdPacienteEditando(paciente.id);
   };
 
   return (
     <div className="contenedor">
       <h1>Sistema de Pacientes</h1>
-      {/* Los campos actualizan el estado y el boton agrega el paciente a la lista. */}
+      {/* El formulario sirve para registrar y editar pacientes. */}
       <div className="formulario">
         <h2>
-          Registrar Paciente
+          {modoEdicion ? "Editar Paciente" : "Registrar Paciente"}
         </h2>
         {faltaNombre && (
           <p id="error-nombre" className="mensaje-error" role="alert">
@@ -69,7 +94,16 @@ function App() {
           </p>
         )}
         <input type="text" aria-label="Especialidad" aria-invalid={faltaEspecialidad} aria-describedby={faltaEspecialidad ? "error-especialidad" : undefined} placeholder="Especialidad" value={especialidad} onChange={(e) => setEspecialidad(e.target.value)} />
-        <button onClick={guardarPaciente}>Guardar Paciente</button>
+        <div className="formulario-acciones">
+          <button type="button" onClick={guardarPaciente}>
+            {modoEdicion ? "Guardar cambios" : "Guardar Paciente"}
+          </button>
+          {modoEdicion && (
+            <button type="button" className="boton-cancelar" onClick={limpiarFormulario}>
+              Cancelar
+            </button>
+          )}
+        </div>
       </div>
       {/* Muestra el estado pacientes; los registros permanecen solo mientras la pagina esta abierta. */}
       <div className="lista">
@@ -99,6 +133,13 @@ function App() {
                   </div>
                 </dl>
                 <div className="paciente-acciones">
+                  <button
+                    type="button"
+                    aria-label={`Editar paciente ${paciente.nombre}`}
+                    onClick={() => editarPaciente(paciente)}
+                  >
+                    Editar
+                  </button>
                   <button
                     type="button"
                     className="boton-eliminar"
