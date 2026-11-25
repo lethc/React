@@ -84,16 +84,11 @@ function App() {
             {/* Cada tarjeta agrupa el nombre y los datos del paciente. */}
             {pacientes.map((paciente) => (
               <article className="paciente-tarjeta" key={paciente.id}>
-                <div className="paciente-encabezado">
-                  <span className="paciente-avatar" aria-hidden="true">
-                    {paciente.nombre.trim().charAt(0).toUpperCase()}
-                  </span>
-                  <div className="paciente-identidad">
-                    <p className="paciente-etiqueta">Paciente</p>
-                    <h3>{paciente.nombre}</h3>
-                  </div>
-                </div>
                 <dl className="paciente-datos">
+                  <div>
+                    <dt>Nombre</dt>
+                    <dd>{paciente.nombre}</dd>
+                  </div>
                   <div>
                     <dt>Edad</dt>
                     <dd>{paciente.edad} {Number(paciente.edad) === 1 ? "año" : "años"}</dd>

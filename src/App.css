@@ -90,49 +90,11 @@ input[aria-invalid="true"] {
   background: #fbfcff;
 }
 
-.paciente-encabezado {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.paciente-avatar {
-  display: grid;
-  place-items: center;
-  flex-shrink: 0;
-  width: 44px;
-  height: 44px;
-  border-radius: 50%;
-  background: #eaf0ff;
-  color: #1f3c88;
-  font-size: 20px;
-  font-weight: 700;
-}
-
-.paciente-identidad {
-  min-width: 0;
-}
-
-.paciente-etiqueta {
-  margin: 0 0 4px;
-  color: #526176;
-  font-size: 12px;
-}
-
-.paciente-identidad h3 {
-  margin: 0;
-  color: #18305d;
-  font-size: 18px;
-  overflow-wrap: anywhere;
-}
-
 .paciente-datos {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-  gap: 16px;
-  margin: 18px 0 0;
-  padding-top: 14px;
-  border-top: 1px solid #e3e9f2;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  margin: 0;
 }
 
 .paciente-datos dt {
@@ -160,10 +122,6 @@ input[aria-invalid="true"] {
 @media (max-width: 480px) {
   .paciente-tarjeta {
     padding: 16px;
-  }
-
-  .paciente-datos {
-    grid-template-columns: minmax(0, 1fr);
   }
 }
 /* Accion de eliminar debajo de los datos de cada paciente. */
